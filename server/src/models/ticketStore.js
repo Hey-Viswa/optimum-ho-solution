@@ -12,8 +12,10 @@ function createSeedTicket({
     severityScore,
     status,
 }) {
+    const ticketId = String(nextId++);
     return {
-        id: String(nextId++),
+        id: ticketId,
+        _id: ticketId,
         description,
         photoUrl,
         location: {
@@ -72,8 +74,10 @@ function getAllTickets() {
 }
 
 function createTicket({ description, photoUrl, longitude, latitude }) {
+    const ticketId = String(nextId++);
     const newTicket = {
-        id: String(nextId++),
+        id: ticketId,
+        _id: ticketId,
         description: description || '',
         photoUrl,
         location: {
@@ -92,7 +96,8 @@ function createTicket({ description, photoUrl, longitude, latitude }) {
 }
 
 function updateTicketStatus(id, status) {
-    const ticket = tickets.find((item) => item.id === String(id));
+    const matchId = String(id);
+    const ticket = tickets.find((item) => item.id === matchId || item._id === matchId);
     if (!ticket) {
         return null;
     }
@@ -101,9 +106,19 @@ function updateTicketStatus(id, status) {
     return ticket;
 }
 
+function getStats() {
+    return {
+        total: tickets.length,
+        open: tickets.filter((t) => t.status === 'open').length,
+        in_progress: tickets.filter((t) => t.status === 'in_progress').length,
+        resolved: tickets.filter((t) => t.status === 'resolved').length,
+    };
+}
+
 module.exports = {
     seedTickets,
     getAllTickets,
     createTicket,
     updateTicketStatus,
+    getStats,
 };
