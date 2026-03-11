@@ -3,11 +3,8 @@ const express = require('express');
 const cors = require('cors');
 
 const ticketRoutes = require('./src/routes/ticketsRoutes');
-<<<<<<< HEAD
 const authRoutes = require('./src/routes/authRoutes');
-=======
 const azureTestRoutes = require('./src/routes/azureTestRoutes');
->>>>>>> de571c24d590f8b389805433c668e3757462bf46
 const { seedTickets } = require('./src/models/ticketStore');
 const { seedAdmin } = require('./src/models/adminStore');
 
@@ -30,11 +27,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 // ========================
 app.use('/api', ticketRoutes);
-<<<<<<< HEAD
 app.use('/api/auth', authRoutes);
-=======
 app.use('/api', azureTestRoutes);
->>>>>>> de571c24d590f8b389805433c668e3757462bf46
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'civiclens-api' });
