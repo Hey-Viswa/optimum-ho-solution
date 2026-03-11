@@ -1,9 +1,34 @@
-const { getAllTickets, createTicket, updateTicketStatus } = require('../models/ticketStore');
+const { getAllTickets, createTicket, updateTicketStatus, getStats } = require('../models/ticketStore');
 
 const ALLOWED_STATUS = ['open', 'in_progress', 'resolved'];
 
 function getTickets(req, res) {
-    const tickets = getAllTickets();
+    const { status, category, sort } = req.query;
+    let tickets = [...getAllTickets()];
+
+    if (status) {
+        tickets = tickets.filter((ticket) => ticket.status === status);
+    }
+
+    if (category) {
+        tickets = tickets.filter((ticket) => ticket.aiCategory === category);
+    }
+
+    // sort=severity → severityScore desc; no sort → createdAt desc
+    const sortMap = { severity: 'severityScore' };
+    const resolvedField = sort ? (sortMap[sort] || sort) : 'createdAt';
+    const sortDirection = sort ? -1 : -1; // both cases descending
+
+    const sortableFields = new Set(['severityScore', 'createdAt']);
+    if (sortableFields.has(resolvedField)) {
+        tickets.sort((a, b) => {
+            if (resolvedField === 'createdAt') {
+                return (new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            }
+            return (b[resolvedField] - a[resolvedField]);
+        });
+    }
+
     return res.status(200).json({
         success: true,
         count: tickets.length,
@@ -12,12 +37,18 @@ function getTickets(req, res) {
 }
 
 function postTicket(req, res) {
-    const { description, photoUrl, longitude, latitude } = req.body;
+    const { description, longitude, latitude } = req.body;
+    const uploadedPhoto = req.file;
+    const photoUrl =
+        req.body.photoUrl ||
+        (uploadedPhoto
+            ? `https://example.com/uploads/${Date.now()}-${uploadedPhoto.originalname || 'issue.jpg'}`
+            : undefined);
 
     if (!photoUrl || longitude === undefined || latitude === undefined) {
         return res.status(400).json({
             success: false,
-            error: 'photoUrl, longitude, and latitude are required.',
+            error: 'photo (or photoUrl), longitude, and latitude are required.',
         });
     }
 
@@ -69,8 +100,14 @@ function patchTicketStatus(req, res) {
     });
 }
 
+function getDashboardStats(req, res) {
+    const stats = getStats();
+    return res.status(200).json(stats);
+}
+
 module.exports = {
     getTickets,
     postTicket,
     patchTicketStatus,
+    getDashboardStats,
 };

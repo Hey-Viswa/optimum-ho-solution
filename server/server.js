@@ -3,7 +3,11 @@ const express = require('express');
 const cors = require('cors');
 
 const ticketRoutes = require('./src/routes/ticketsRoutes');
+<<<<<<< HEAD
 const authRoutes = require('./src/routes/authRoutes');
+=======
+const azureTestRoutes = require('./src/routes/azureTestRoutes');
+>>>>>>> de571c24d590f8b389805433c668e3757462bf46
 const { seedTickets } = require('./src/models/ticketStore');
 const { seedAdmin } = require('./src/models/adminStore');
 
@@ -26,7 +30,11 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 // ========================
 app.use('/api', ticketRoutes);
+<<<<<<< HEAD
 app.use('/api/auth', authRoutes);
+=======
+app.use('/api', azureTestRoutes);
+>>>>>>> de571c24d590f8b389805433c668e3757462bf46
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'civiclens-api' });
@@ -38,7 +46,17 @@ app.get('/health', (req, res) => {
 seedTickets();
 seedAdmin();
 
-app.listen(PORT, () => {
-    console.log('🚀 Server running with in-memory ticket data');
-    console.log(`🌐 Listening on http://localhost:${PORT}`);
+const server = app.listen(PORT, () => {
+    console.log('Server running with in-memory ticket data');
+    console.log(`Listening on http://localhost:${PORT}`);
+});
+
+server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use.`);
+        console.error('Stop the existing process on that port or set a different PORT in .env.');
+        process.exit(1);
+    }
+
+    throw error;
 });
