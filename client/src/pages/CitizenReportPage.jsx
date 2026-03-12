@@ -32,6 +32,7 @@ function CitizenReportPage() {
     const [submitting, setSubmitting] = useState(false);
     const [listening, setListening] = useState(false);
     const [heroIdx, setHeroIdx] = useState(0);
+    const [morphState, setMorphState] = useState('idle'); // idle | morphing | success
     const recognitionRef = useRef(null);
 
     const toggleVoice = () => {
@@ -119,14 +120,20 @@ function CitizenReportPage() {
         setSubmitting(true);
         try {
             await submitTicket(fd);
-            toast.success('Issue reported! Thank you for helping your city.');
-            clearPhoto();
-            setDescription('');
-            setCoords(null);
+            setSubmitting(false);
+            // Start morph animation
+            setMorphState('morphing');
+            setTimeout(() => setMorphState('success'), 650);
+            // Reset after animation plays
+            setTimeout(() => {
+                setMorphState('idle');
+                clearPhoto();
+                setDescription('');
+                setCoords(null);
+            }, 3200);
         } catch (err) {
             const msg = err.response?.data?.error ?? 'Submission failed. Please try again.';
             toast.error(msg);
-        } finally {
             setSubmitting(false);
         }
     };
@@ -164,8 +171,35 @@ function CitizenReportPage() {
                 </div>
             </header>
 
+            {/* ── Morph Success Overlay ── */}
+            <div className={`morph-overlay${morphState !== 'idle' ? ' active' : ''}${morphState === 'success' ? ' show-check' : ''}`}>
+                <div className="morph-backdrop" />
+                <div className="flex flex-col items-center gap-5">
+                    <div className="morph-circle">
+                        <div className="morph-checkmark-wrap">
+                            <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+                                <circle className="morph-checkmark-bg" cx="28" cy="28" r="28" fill="#22c55e" />
+                                <path
+                                    className="morph-checkmark-path"
+                                    d="M16 28.5L24 36.5L40 20.5"
+                                    stroke="white"
+                                    strokeWidth="4"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    fill="none"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+                    <div className="morph-success-text text-center">
+                        <p className="text-lg font-bold text-slate-800">Issue Reported!</p>
+                        <p className="text-sm text-slate-500 mt-1">Thank you for helping your city.</p>
+                    </div>
+                </div>
+            </div>
+
             {/* ── Form ── */}
-            <main className="relative z-10 px-4 pt-6 space-y-6 max-w-md mx-auto">
+            <main className={`relative z-10 px-4 pt-6 space-y-6 max-w-md mx-auto${morphState !== 'idle' ? ' form-morphing' : ''}`}>
 
                 {/* Hero */}
                 <section className="pt-4 pb-1 text-center">
@@ -301,29 +335,7 @@ function CitizenReportPage() {
                     </div>
                 </section>
 
-                {/* Category Shortcuts */}
-                <section className="bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm rounded-2xl p-4 space-y-3">
-                    <label className="block text-sm font-semibold text-slate-600">
-                        Common Categories
-                    </label>
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                        {['Pothole', 'Lighting', 'Sanitation', 'Waterlogging', 'Other'].map((cat) => (
-                            <button
-                                key={cat}
-                                type="button"
-                                onClick={() => {
-                                    const prefix = cat + ': ';
-                                    if (!description.startsWith(prefix)) {
-                                        setDescription(prefix + description);
-                                    }
-                                }}
-                                className="flex-none glass px-4 py-2 rounded-full text-xs font-semibold hover:bg-primary hover:text-white transition-all active:scale-95"
-                            >
-                                {cat}
-                            </button>
-                        ))}
-                    </div>
-                </section>
+            
 
                 {/* Submit Button */}
                 <section className="pt-4 pb-16">
