@@ -107,6 +107,7 @@ function AdminDashboard() {
     sort: "-severityScore",
   });
   const [bounds, setBounds] = useState(null);
+  const [showResolved, setShowResolved] = useState(false);
   const debounceRef = useRef(null);
   const wsRef = useRef(null);
   const wsRetryRef = useRef(null);
@@ -277,6 +278,7 @@ function AdminDashboard() {
     () =>
       tickets
         .filter((t) => t.location?.coordinates?.length === 2)
+        .filter((t) => showResolved || t.status !== 'resolved')
         .map((t) => ({
           lng: t.location.coordinates[0],
           lat: t.location.coordinates[1],
@@ -289,7 +291,7 @@ function AdminDashboard() {
                         </div>`,
           onClick: () => setSelectedTicket(t),
         })),
-    [tickets],
+    [tickets, showResolved],
   );
 
   const totalTickets = stats?.total ?? 0;
@@ -549,7 +551,24 @@ function AdminDashboard() {
             <div className="liquid-glass rounded-xl overflow-hidden h-full flex flex-col">
               <div className="p-5 flex items-center justify-between border-b border-slate-200/50 bg-white/10">
                 <h3 className="font-bold">Live Heatmap</h3>
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-3 items-center">
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <span className="text-[10px] font-medium text-slate-500">Resolved</span>
+                    <button
+                      role="switch"
+                      aria-checked={showResolved}
+                      onClick={() => setShowResolved((v) => !v)}
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${
+                        showResolved ? 'bg-emerald-400' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${
+                          showResolved ? 'translate-x-3.5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                  </label>
                   <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                     Live
