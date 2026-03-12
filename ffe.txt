@@ -1,8 +1,0 @@
-Phase 1 — Visual WOW
-
-Animated colour-shifting blob background (3 blobs, CSS keyframes, no library needed)
-Glassmorphism rounded-2xl cards for every section
-Dynamic hero text cycling through "a pothole?", "garbage dumping?" etc.
-
-
-Voice-to-text: microphone button inside the description box using the native Web Speech API (SpeechRecognition) — no extra library needed
