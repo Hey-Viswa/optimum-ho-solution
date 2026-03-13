@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import API from '../services/api';
+import API, { API_BASE } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -32,11 +32,10 @@ export function AuthProvider({ children }) {
             const ctrl = new AbortController();
             const t = setTimeout(() => ctrl.abort(), 20000);
             try {
-                const res = await fetch('/api/auth/login', {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true',
                     },
                     body: JSON.stringify({ username, password }),
                     signal: ctrl.signal,
@@ -60,7 +59,6 @@ export function AuthProvider({ children }) {
             setAdmin(data.admin);
             return data;
         } catch (err) {
-            // ngrok/free-tunnel requests can occasionally fail transiently.
             if (!err?.response) {
                 await new Promise((r) => setTimeout(r, 500));
                 let data;

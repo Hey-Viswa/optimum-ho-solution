@@ -1,4 +1,5 @@
 const tickets = [];
+const { normalizePhotoUrl } = require('../utils/photoUrl');
 
 let nextId = 1;
 
@@ -17,7 +18,7 @@ function createSeedTicket({
         id: ticketId,
         _id: ticketId,
         description,
-        photoUrl,
+        photoUrl: normalizePhotoUrl(photoUrl),
         location: {
             type: 'Point',
             coordinates: [longitude, latitude],
@@ -47,7 +48,7 @@ function createTicket({ description, photoUrl, longitude, latitude, aiCategory, 
         id: ticketId,
         _id: ticketId,
         description: description || '',
-        photoUrl,
+        photoUrl: normalizePhotoUrl(photoUrl),
         location: {
             type: 'Point',
             coordinates: [longitude, latitude],
@@ -100,7 +101,7 @@ function loadFromMongo(docs) {
             id,
             _id: id,
             description: doc.description || '',
-            photoUrl: doc.photoUrl,
+            photoUrl: normalizePhotoUrl(doc.photoUrl),
             location: doc.location,
             aiCategory: doc.aiCategory || 'unclassified',
             aiConfidence: doc.aiConfidence ?? 0,

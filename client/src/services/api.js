@@ -1,11 +1,12 @@
 import axios from 'axios';
 
+export const API_BASE = "https://d3coujrx9zr1yv.cloudfront.net";
+
+const API_ROOT = import.meta.env.VITE_API_BASE || API_BASE;
+
 const API = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+    baseURL: `${API_ROOT}/api`,
     timeout: 30000, // 30s — AI classification can take time
-    headers: {
-        'ngrok-skip-browser-warning': 'true',
-    },
 });
 
 // Attach admin JWT token if present
@@ -35,7 +36,7 @@ API.interceptors.response.use(
  */
 export const submitTicket = (formData) =>
     API.post('/tickets', formData, {
-        // Upload + AI classification over ngrok can exceed the default 30s timeout.
+        // Upload + AI classification can exceed the default 30s timeout.
         timeout: 120000,
     });
 

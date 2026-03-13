@@ -2,6 +2,7 @@ const { getAllTickets, createTicket, updateTicketStatus, getStats } = require('.
 const { uploadBufferToBlob } = require('../utils/blobUpload');
 const { classifyImage, classifyImageFromUrl } = require('../utils/aiClassifier');
 const { broadcast } = require('../utils/wsServer');
+const { PHOTO_PLACEHOLDER_URL, normalizePhotoUrl, sanitizeTicketPhoto } = require('../utils/photoUrl');
 const TicketModel = require('../../models/Ticket');
 const mongoose = require('mongoose');
 
@@ -128,7 +129,7 @@ function getTickets(req, res) {
     // Pagination
     const total = tickets.length;
     const start = (page - 1) * limit;
-    const paginated = tickets.slice(start, start + limit);
+    const paginated = tickets.slice(start, start + limit).map((ticket) => sanitizeTicketPhoto({ ...ticket }));
 
     return res.status(200).json({
         success: true,
@@ -166,7 +167,7 @@ async function postTicket(req, res) {
     }
 
     // ── 2. Upload image to Azure Blob Storage ─────────────────────
-    let photoUrl = req.body.photoUrl || null;
+    let photoUrl = normalizePhotoUrl(req.body.photoUrl || null);
     if (uploadedPhoto) {
         try {
             const { blobUrl } = await uploadBufferToBlob({
@@ -174,11 +175,10 @@ async function postTicket(req, res) {
                 originalName: uploadedPhoto.originalname,
                 mimeType: uploadedPhoto.mimetype,
             });
-            photoUrl = blobUrl;
+            photoUrl = normalizePhotoUrl(blobUrl);
         } catch (azureErr) {
             console.warn('⚠️  Azure unavailable, using demo mode:', azureErr.message);
-            // Demo fallback: generate placeholder URL
-            photoUrl = `https://via.placeholder.com/600x400/4F46E5/FFFFFF?text=Issue+Photo+${Date.now()}`;
+            photoUrl = PHOTO_PLACEHOLDER_URL;
         }
     }
 
@@ -253,11 +253,12 @@ async function postTicket(req, res) {
     });
 
     // ── 6. Push real-time update to all admin dashboard clients ──
-    broadcast('new_ticket', ticket);
+    const safeTicket = sanitizeTicketPhoto({ ...ticket });
+    broadcast('new_ticket', safeTicket);
 
     return res.status(201).json({
         success: true,
-        data: ticket,
+        data: safeTicket,
     });
 }
 
@@ -291,7 +292,7 @@ async function patchTicketStatus(req, res) {
     // Push real-time status update to admin dashboard clients
     broadcast('ticket_updated', { id, status });
 
-    return res.status(200).json({ success: true, data: updated });
+    return res.status(200).json({ success: true, data: sanitizeTicketPhoto({ ...updated }) });
 }
 
 async function getTicketById(req, res) {
@@ -302,7 +303,7 @@ async function getTicketById(req, res) {
         try {
             const doc = await TicketModel.findById(id).lean();
             if (doc) {
-                return res.status(200).json({ success: true, data: doc });
+                return res.status(200).json({ success: true, data: sanitizeTicketPhoto({ ...doc }) });
             }
         } catch {
             // fall through to in-memory
@@ -314,7 +315,7 @@ async function getTicketById(req, res) {
     if (!ticket) {
         return res.status(404).json({ success: false, error: 'Ticket not found.' });
     }
-    return res.status(200).json({ success: true, data: ticket });
+    return res.status(200).json({ success: true, data: sanitizeTicketPhoto({ ...ticket }) });
 }
 
 async function getDashboardStats(req, res) {

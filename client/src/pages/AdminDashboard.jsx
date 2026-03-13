@@ -74,6 +74,7 @@ const STATUS_BADGE = {
 };
 
 const REFRESH_MS = 30_000; // fallback poll when WS is disconnected
+const PHOTO_PLACEHOLDER = "https://picsum.photos/600/400";
 
 // Derive WS URL from current origin (works with ngrok, localhost, any host)
 function getWsUrl() {
@@ -796,21 +797,23 @@ function TicketModal({ ticket, onClose, onStatusChange, isUpdating }) {
             <div className="lg:col-span-7 p-8 border-r border-slate-200/50">
               <div className="space-y-8">
                 {/* Photo */}
-                {ticket.photoUrl && (
-                  <div className="group relative overflow-hidden rounded-xl bg-slate-100 aspect-video shadow-inner border border-slate-200/50">
-                    <img
-                      alt="Reported issue"
-                      className="w-full h-full object-cover"
-                      src={ticket.photoUrl}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                      <span className="text-white text-xs font-medium flex items-center gap-1">
-                        <Icon name="zoom_in" className="text-sm" /> Click to
-                        enlarge
-                      </span>
-                    </div>
+                <div className="group relative overflow-hidden rounded-xl bg-slate-100 aspect-video shadow-inner border border-slate-200/50">
+                  <img
+                    alt="Reported issue"
+                    className="w-full h-full object-cover"
+                    src={ticket.photoUrl || PHOTO_PLACEHOLDER}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = PHOTO_PLACEHOLDER;
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                    <span className="text-white text-xs font-medium flex items-center gap-1">
+                      <Icon name="zoom_in" className="text-sm" /> Click to
+                      enlarge
+                    </span>
                   </div>
-                )}
+                </div>
 
                 {/* Citizen Report */}
                 {ticket.description && (
