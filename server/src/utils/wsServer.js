@@ -21,6 +21,11 @@ function attachWss(httpServer) {
     // so the Vite proxy can forward /ws → backend cleanly
     wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
+    // Prevent unhandled 'error' crashes when the underlying HTTP server errors.
+    wss.on('error', (err) => {
+        console.error('WebSocket server error:', err.message);
+    });
+
     wss.on('connection', (ws, req) => {
         // Send a welcome ping so clients know the handshake succeeded
         ws.send(JSON.stringify({ type: 'ping', payload: null }));

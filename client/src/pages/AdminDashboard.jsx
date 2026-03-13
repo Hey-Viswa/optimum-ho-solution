@@ -74,13 +74,20 @@ const STATUS_BADGE = {
 };
 
 const REFRESH_MS = 30_000; // fallback poll when WS is disconnected
-const PHOTO_PLACEHOLDER = "https://picsum.photos/600/400";
 
-// Derive WS URL from current origin (works with ngrok, localhost, any host)
+const PROD_API_BASE = "https://d3coujrx9zr1yv.cloudfront.net";
+
+// Build WebSocket URL with a direct backend target for local dev.
 function getWsUrl() {
-  const wsProto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  // /ws path is proxied by Vite → backend; avoids collision with Vite HMR socket
-  return `${wsProto}://${window.location.host}/ws`;
+  // Bypass Vite's ws proxy in local dev to avoid ECONNABORTED proxy noise.
+  if (import.meta.env.DEV) {
+    return "ws://localhost:3001/ws";
+  }
+
+  const apiBase = import.meta.env.VITE_API_BASE || PROD_API_BASE;
+  const apiUrl = new URL(apiBase);
+  const wsProto = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${wsProto}//${apiUrl.host}/ws`;
 }
 
 // ─── Icon helper ─────────────────────────────────────────────────────────────
@@ -798,15 +805,17 @@ function TicketModal({ ticket, onClose, onStatusChange, isUpdating }) {
               <div className="space-y-8">
                 {/* Photo */}
                 <div className="group relative overflow-hidden rounded-xl bg-slate-100 aspect-video shadow-inner border border-slate-200/50">
-                  <img
-                    alt="Reported issue"
-                    className="w-full h-full object-cover"
-                    src={ticket.photoUrl || PHOTO_PLACEHOLDER}
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = PHOTO_PLACEHOLDER;
-                    }}
-                  />
+                  {ticket.photoUrl ? (
+                    <img
+                      alt="Reported issue"
+                      className="w-full h-full object-cover"
+                      src={ticket.photoUrl}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-sm font-medium text-slate-500">
+                      No Azure image URL for this ticket.
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                     <span className="text-white text-xs font-medium flex items-center gap-1">
                       <Icon name="zoom_in" className="text-sm" /> Click to

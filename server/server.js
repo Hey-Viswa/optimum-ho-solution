@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const http = require('http');
 
 const ticketRoutes = require('./src/routes/ticketsRoutes');
 const authRoutes = require('./src/routes/authRoutes');
@@ -59,13 +60,7 @@ async function startServer() {
         console.warn('MONGO_URI not set — MongoDB persistence disabled');
     }
 
-    const server = app.listen(PORT, () => {
-        console.log('Server running');
-        console.log(`Listening on http://localhost:${PORT}`);
-    });
-
-    // Attach WebSocket server to the same HTTP server
-    attachWss(server);
+    const server = http.createServer(app);
 
     server.on('error', (error) => {
         if (error.code === 'EADDRINUSE') {
@@ -74,6 +69,13 @@ async function startServer() {
             process.exit(1);
         }
         throw error;
+    });
+
+    server.listen(PORT, () => {
+        // Attach WebSocket server only after HTTP server is successfully bound.
+        attachWss(server);
+        console.log('Server running');
+        console.log(`Listening on http://localhost:${PORT}`);
     });
 }
 

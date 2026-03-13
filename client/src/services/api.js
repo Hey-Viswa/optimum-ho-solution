@@ -2,7 +2,9 @@ import axios from 'axios';
 
 export const API_BASE = "https://d3coujrx9zr1yv.cloudfront.net";
 
-const API_ROOT = import.meta.env.VITE_API_BASE || API_BASE;
+const API_ROOT = import.meta.env.DEV
+    ? "http://localhost:3001"
+    : (import.meta.env.VITE_API_BASE || API_BASE);
 
 const API = axios.create({
     baseURL: `${API_ROOT}/api`,
